@@ -1,4 +1,4 @@
-# Dára Home (Dara-awarri)
+# Dára Home (Dara-awarri) 🇳🇬
 
 **Dára Home** is a multilingual, voice-first smart home assistant designed specifically for the Nigerian context. It bridges the gap between modern smart home technology and local linguistic reality by supporting **English, Yoruba, Hausa, and Igbo**.
 
