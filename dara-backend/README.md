@@ -8,7 +8,7 @@ Production-quality backend for the Dára Home voice assistant, featuring native 
 |---|---|---|
 | **STT** | **OpenAI Whisper** | Robust speech recognition for Nigerian accents (En, Yo, Ha, Ig). |
 | **Reasoning** | **NCAIR1/N-ATLaS (Modal)** | The actual N-ATLaS model deployed on Modal.co for intent classification. |
-| **TTS** | **OpenAI TTS-1** | High-quality, multilingual text-to-speech. |
+| **TTS** | **Google Cloud TTS** | High-quality, multilingual text-to-speech. |
 
 ### Language Support Matrix
 
@@ -24,7 +24,7 @@ Production-quality backend for the Dára Home voice assistant, featuring native 
 2.  **Normalization**: Converts payload to 16kHz WAV.
 3.  **Transcription**: OpenAI Whisper detects language and transcribes text.
 4.  **Reasoning**: NCAIR1/N-ATLaS (deployed on Modal) receives text + language, determines intent, and generates a response *in the same language*.
-5.  **Synthesis**: OpenAI TTS-1 generates the spoken response.
+5.  **Synthesis**: Google TTS generates the spoken response.
 6.  **Response**: JSON payload with intent, language metadata, and base64 audio.
 
 ## Setup

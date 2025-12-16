@@ -3,7 +3,7 @@ import asyncio
 import logging
 from typing import Optional
 
-from openai import AsyncOpenAI
+
 from google.cloud import texttospeech
 from dotenv import load_dotenv
 
@@ -12,10 +12,7 @@ from dotenv import load_dotenv
 # --------------------------------------------------
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-if not OPENAI_API_KEY:
-    raise RuntimeError("OPENAI_API_KEY not set")
 
 # Requires:
 # export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service_account.json"
@@ -30,9 +27,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # --------------------------------------------------
-# OPENAI CLIENT (FALLBACK)
+
 # --------------------------------------------------
-openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+
 
 # --------------------------------------------------
 # GOOGLE TTS CLIENT
@@ -130,20 +127,7 @@ def _generate_google_tts_sync(text: str, language: str) -> Optional[bytes]:
         return None
 
 
-# --------------------------------------------------
-# OPENAI TTS (FALLBACK)
-# --------------------------------------------------
-async def generate_audio_openai(text: str) -> bytes:
-    try:
-        response = await openai_client.audio.speech.create(
-            model="tts-1",
-            voice="nova",
-            input=text,
-        )
-        return response.content
-    except Exception as e:
-        logger.error(f"OpenAI TTS error: {e}")
-        return b""
+
 
 
 # --------------------------------------------------
@@ -175,9 +159,8 @@ async def generate_audio(text: str, language: str = "en") -> bytes:
 
         logger.warning("Google TTS returned no audio")
 
-    # 2️⃣ OpenAI fallback
-    logger.info("Falling back to OpenAI TTS")
-    return await generate_audio_openai(text)
+
+    return b""
 
 
 # --------------------------------------------------
