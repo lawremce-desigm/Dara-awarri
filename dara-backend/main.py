@@ -34,9 +34,9 @@ async def process_voice(audio: UploadFile = File(...)):
     Core endpoint for Dára Home.
     Accepts audio file, returns transcript, intent, and base64 audio response.
     """
-    # 1. Validate file type
+    # Basic check to see if it's actually an audio file
     if not audio.content_type.startswith("audio/") and not audio.filename.lower().endswith(('.mp3', '.mp4', '.wav', '.m4a')):
-        # Log warning but proceed if possible, or raise
+        # Just a warning for now
         pass
 
     try:
@@ -49,24 +49,24 @@ async def process_voice(audio: UploadFile = File(...)):
         if len(audio_bytes) == 0:
             raise HTTPException(status_code=400, detail="Empty audio file received.")
         
-        # 2. Normalize audio (Async)
+        # Normalize audio format first
         wav_bytes = await audio_utils.convert_to_wav(audio_bytes)
         logger.info(f"Converted WAV size: {len(wav_bytes)} bytes")
         t1 = time.time()
         
-        # 3. Speech to Text (Async - Deepgram)
+        # Get transcript from Deepgram
         transcript, language = await stt_service.transcribe(wav_bytes)
         t2 = time.time()
         logger.info(f"STT: '{transcript}' ({language}) [{t2-t1:.4f}s]")
         
-        # 4. Reasoning (Async)
+        # Analyze intent
         reasoning_result = await reasoning.classify_intent(transcript, language)
         intent = reasoning_result["intent"]
         response_text = reasoning_result["response_text"]
         t3 = time.time()
         logger.info(f"Intent: {intent.type} Action: {intent.action} Device: {intent.device} [{t3-t2:.4f}s]")
         
-        # 5. Text to Speech (Async)
+        # Generate voice response
         response_lang = intent.language or language
         response_audio_bytes = await tts.generate_audio(response_text, response_lang)
         t4 = time.time()
@@ -74,7 +74,7 @@ async def process_voice(audio: UploadFile = File(...)):
         
         logger.info(f"Total Processing Time: {t4-t0:.4f}s")
         
-        # 6. Return Response
+        # Send it back
         response_audio_b64 = base64.b64encode(response_audio_bytes).decode("utf-8")
         
         return VoiceResponse(

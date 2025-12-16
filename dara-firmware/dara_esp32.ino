@@ -2,16 +2,17 @@
 #include <WebServer.h>
 
 // ---------------------------------------------------
-// WIFI CONFIGURATION
-// REPLACE WITH YOUR NETWORK CREDENTIALS
 // ---------------------------------------------------
-const char* ssid = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
+// NETWORK CONFIGURATION
+// Wireless credentials
+// ---------------------------------------------------
+const char* ssid = "WIFI_SSID";
+const char* password = "WIFI_PASSWORD";
 
 // ---------------------------------------------------
 // PIN DEFINITIONS
 // ---------------------------------------------------
-// On most ESP32 Dev Boards, GPIO 2 is the built-in LED.
+// GPIO 2 is usually the built-in LED on these boards
 const int LIGHT_PIN = 2; 
 const int FAN_PIN = 5;
 
@@ -19,7 +20,8 @@ const int FAN_PIN = 5;
 WebServer server(80);
 
 // ---------------------------------------------------
-// SETUP
+// ---------------------------------------------------
+// INITIALIZATION
 // ---------------------------------------------------
 void setup() {
   Serial.begin(115200);
@@ -49,7 +51,7 @@ void setup() {
 
   // Define HTTP Routes
   
-  // 1. Light Control
+  // Light Control
   server.on("/light/turn/on", HTTP_POST, []() {
     digitalWrite(LIGHT_PIN, HIGH);
     server.send(200, "text/plain", "Light turned ON");
@@ -62,7 +64,7 @@ void setup() {
     Serial.println("Command: Light OFF");
   });
 
-  // 2. Fan Control
+  // Fan Control
   server.on("/fan/turn/on", HTTP_POST, []() {
     digitalWrite(FAN_PIN, HIGH);
     server.send(200, "text/plain", "Fan turned ON");
@@ -75,14 +77,10 @@ void setup() {
     Serial.println("Command: Fan OFF");
   });
 
-  // 3. Temperature Check
+  // Temperature Check
   server.on("/temperature", HTTP_GET, []() {
-    // SIMULATED SENSOR READING
-    // To use a real DHT11/DHT22:
-    // 1. Install "DHT sensor library" by Adafruit
-    // 2. #include "DHT.h"
-    // 3. dht.readTemperature();
-    
+    // For now, just simulating a sensor reading.
+    // If I add a real DHT11 later, I'll need the Adafruit library here.
     float simulatedTemp = 24.5 + (random(0, 20) / 10.0); // 24.5 - 26.5
     String tempStr = String(simulatedTemp, 1) + " °C";
     
@@ -90,18 +88,16 @@ void setup() {
     Serial.println("Command: Check Temperature -> " + tempStr);
   });
 
-  // 4. Health Check
+  // Health Check
   server.on("/", HTTP_GET, []() {
     server.send(200, "text/plain", "Dara ESP32 Controller is Online");
   });
 
   /* 
-   * BLUETOOTH NOTE:
-   * To implement Bluetooth Low Energy (BLE) control:
-   * 1. Include <BLEDevice.h>, <BLEServer.h>, <BLEUtils.h>, <BLE2902.h>
-   * 2. Create BLE Service and Characteristics for Light/Fan
-   * 3. This requires significant changes to the Flutter App (using flutter_blue_plus)
-   * 4. For now, we are sticking to WiFi for consistency with existing app architecture.
+   * FUTURE UPGRADE:
+   * Bluetooth (BLE) support could be added here using <BLEDevice.h>.
+   * Would need to update the Flutter app to handle the BLE handshake.
+   * Keeping it simple with WiFi for now.
    */
 
   // Start Server
@@ -110,7 +106,7 @@ void setup() {
 }
 
 // ---------------------------------------------------
-// LOOP
+// MAIN LOOP
 // ---------------------------------------------------
 void loop() {
   server.handleClient();

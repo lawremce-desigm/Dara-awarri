@@ -15,7 +15,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 async def classify_intent_openai(transcript: str, language: str) -> dict:
-    """Fallback to OpenAI if Modal is warming up (Async)"""
+    """Fallback to OpenAI if the main model is cold."""
     system_prompt = f"""You are Dára Home, a Nigerian multilingual smart home assistant (like Alexa or Google Home).
 
 You help users control their smart home devices and have friendly conversations. The user may speak in: English, Yoruba, Hausa, or Igbo.
@@ -75,8 +75,8 @@ def parse_intent_data(data: dict, language: str) -> dict:
 
 async def classify_intent(transcript: str, language: str) -> dict:
     """
-    Sends transcript to N-ATLaS (running on Modal) and returns the intent JSON and response text.
-    Falls back to OpenAI if Modal is warming up (timeout).
+    Hits the N-ATLaS endpoint on Modal.
+    Falls back to OpenAI if it times out clearly.
     Returns: {"intent": Intent, "response_text": str}
     """
     if not transcript:
@@ -86,10 +86,10 @@ async def classify_intent(transcript: str, language: str) -> dict:
         }
 
     try:
-        # Try Modal N-ATLaS first
+        # Try our Modal endpoint first
         print("Sending to N-ATLaS (Modal transformers)...")
         
-        # Wrap blocking requests.post in asyncio.to_thread
+        # Need to offload this since requests is blocking
         response = await asyncio.to_thread(
             requests.post,
             ATLAS_ENDPOINT,
@@ -100,11 +100,10 @@ async def classify_intent(transcript: str, language: str) -> dict:
         response.raise_for_status()
         result = response.json()
         
-        # Extract generated text
         generated_text = result.get("generated_text", "")
         print(f"DEBUG N-ATLaS Output: {generated_text}")
         
-        # Parse JSON from generated text
+        # Parse the JSON blob from the model output
         try:
             # Find JSON in the response
             start = generated_text.find("{")
@@ -114,7 +113,7 @@ async def classify_intent(transcript: str, language: str) -> dict:
                 data = json.loads(json_str)
                 return parse_intent_data(data, language)
             else:
-                # Fallback if no JSON
+                # No JSON block found
                 print("No JSON found in N-ATLaS output")
                 # return await classify_intent_openai(transcript, language)
                 return {
@@ -131,7 +130,7 @@ async def classify_intent(transcript: str, language: str) -> dict:
             }
 
     except requests.exceptions.Timeout:
-        # Modal is warming up, return error instead of fallback
+        # Modal is probably starting up, just wait properly next time
         print("Modal timeout (cold start)")
         # return await classify_intent_openai(transcript, language)
         return {

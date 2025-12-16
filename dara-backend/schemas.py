@@ -26,7 +26,7 @@ class Language(str, Enum):
 
 class Intent(BaseModel):
     type: IntentType
-    language: str = "en" # Using string to be flexible or use Language enum
+    language: str = "en" # Keeping flexible for now
     action: Action = Action.NONE
     device: Device = Device.NONE
     response_text: str = "Done."
