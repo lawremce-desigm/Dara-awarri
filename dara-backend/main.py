@@ -18,7 +18,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 app = FastAPI(title="Dára Home Backend")
+
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
