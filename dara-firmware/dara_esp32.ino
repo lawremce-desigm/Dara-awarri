@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <WebServer.h>
+#include <DHT.h>
 
 // ---------------------------------------------------
 // ---------------------------------------------------
@@ -12,6 +13,14 @@ const char* password = "WIFI_PASSWORD";
 // ---------------------------------------------------
 // PIN DEFINITIONS
 // ---------------------------------------------------
+// GPIO 4 for Data, using a DHT11 sensor (blue one).
+// If I ever switch to the white DHT22, I need to change DHTTYPE.
+#define DHTPIN 4     
+#define DHTTYPE DHT11
+
+// Initialize DHT sensor
+DHT dht(DHTPIN, DHTTYPE);
+
 // GPIO 2 is usually the built-in LED on these boards
 const int LIGHT_PIN = 2; 
 const int FAN_PIN = 5;
@@ -29,6 +38,9 @@ void setup() {
   // Initialize Pins
   pinMode(LIGHT_PIN, OUTPUT);
   pinMode(FAN_PIN, OUTPUT);
+  
+  // Start the sensor
+  dht.begin();
   
   // Default state: OFF
   digitalWrite(LIGHT_PIN, LOW);
@@ -79,10 +91,17 @@ void setup() {
 
   // Temperature Check
   server.on("/temperature", HTTP_GET, []() {
-    // For now, just simulating a sensor reading.
-    // If I add a real DHT11 later, I'll need the Adafruit library here.
-    float simulatedTemp = 24.5 + (random(0, 20) / 10.0); // 24.5 - 26.5
-    String tempStr = String(simulatedTemp, 1) + " °C";
+    // Reading temperature or humidity takes about 250 milliseconds!
+    float t = dht.readTemperature();
+
+    // Check if any reads failed and exit early (to try again).
+    if (isnan(t)) {
+      Serial.println("Failed to read from DHT sensor!");
+      server.send(500, "text/plain", "Sensor Error");
+      return;
+    }
+    
+    String tempStr = String(t, 1) + " °C";
     
     server.send(200, "text/plain", tempStr);
     Serial.println("Command: Check Temperature -> " + tempStr);
