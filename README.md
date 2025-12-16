@@ -6,25 +6,6 @@
 
 The system operates on a **Controller-Facilitator** model where the Mobile App acts as the central brain for orchestration, while the Backend handles intelligence and the ESP32 handles physical execution.
 
-```mermaid
-flowchart LR
-    User((User)) <--> App[📱 Mobile App\n(Flutter)]
-    App <--> Backend[🧠 Backend API\n(FastAPI)]
-    App --> ESP32[💡 Device Controller\n(ESP32 / C++)]
-    
-    subgraph Cloud Intelligence
-        Backend --> Whisper[Speech-to-Text\n(Deepgram)]
-        Backend --> ATLAS[Intent/Reasoning\n(N-ATLaS / Modal)]
-        Backend --> TTS[Text-to-Speech\n(Google/Edge)]
-    end
-
-    subgraph Physical World
-        ESP32 --> Light[Lights]
-        ESP32 --> Fan[Fans]
-        ESP32 -- GPIO 4 --> Temp[DHT11 Sensor]
-    end
-```
-
 ### 🔄 How It Works
 1.  **Voice Command**: The user speaks into the **Mobile App** (e.g., *"Tan ina yara mi"* - Turn on my room light).
 2.  **Processing**: The app sends the audio to the **Backend**.
