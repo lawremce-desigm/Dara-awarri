@@ -1,0 +1,38 @@
+name: dara_app
+description: Dara Home - Voice-controlled smart home assistant
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  provider: ^6.1.0
+  
+  # HTTP
+  http: ^1.2.0
+  
+  # Audio
+  record: ^6.1.2
+  just_audio: ^0.9.40
+  
+  # Utilities
+  path_provider: ^2.1.0
+  permission_handler: ^11.3.0
+  shared_preferences: ^2.2.0
+  
+  # UI
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

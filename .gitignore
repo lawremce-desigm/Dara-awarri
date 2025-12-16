@@ -1,0 +1,34 @@
+# Flutter
+.dart_tool/
+.packages
+.pub/
+build/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/app.flx
+ios/Flutter/app.zip
+ios/Flutter/flutter_assets/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+android/local.properties
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+.pytest_cache/
+
+# Mac
+.DS_Store
+
+# Secrets
+dara-backend/empirical-axon-470418-e0-89bd3c4b3155.json
+
+
+# IDEs
+.idea/
+.vscode/
+*.iml

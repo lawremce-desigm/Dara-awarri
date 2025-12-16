@@ -1,0 +1,4 @@
+<key>NSMicrophoneUsageDescription</key>
+<string>Dara Home needs access to your microphone to process voice commands</string>
+<key>NSSpeechRecognitionUsageDescription</key>
+<string>Dara Home uses speech recognition to understand your commands</string>
