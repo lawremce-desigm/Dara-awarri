@@ -19,6 +19,8 @@ void main() async {
   ));
 }
 
+// Root of the application
+
 class MyApp extends StatelessWidget {
   final String backendUrl;
   final String esp32Ip;
