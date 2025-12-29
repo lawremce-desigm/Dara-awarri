@@ -8,23 +8,23 @@ Production-quality backend for the Dára Home voice assistant, featuring native 
 |---|---|---|
 | **STT** | **OpenAI Whisper** | Robust speech recognition for Nigerian accents (En, Yo, Ha, Ig). |
 | **Reasoning** | **NCAIR1/N-ATLaS (Modal)** | The actual N-ATLaS model deployed on Modal.co for intent classification. |
-| **TTS** | **Google Cloud TTS** | High-quality, multilingual text-to-speech. |
+| **TTS** | **Spitch** | High-quality, native African text-to-speech. |
 
 ### Language Support Matrix
 
-| Language | Code | STT | Reasoning | TTS |
+| Language | Code | STT | Reasoning | TTS (Spitch Voice) |
 |---|---|---|---|---|
-| English | `en` | ✅ | ✅ | ✅ |
-| Yoruba | `yo` | ✅ | ✅ | ✅ |
-| Hausa | `ha` | ✅ | ✅ | ✅ |
-| Igbo | `ig` | ✅ | ✅ | ✅ |
+| English | `en` | ✅ | ✅ | ✅ (`lucy`) |
+| Yoruba | `yo` | ✅ | ✅ | ✅ (`sade`) |
+| Hausa | `ha` | ✅ | ✅ | ✅ (`amina`) |
+| Igbo | `ig` | ✅ | ✅ | ✅ (`ngozi`) |
 
 ### Data Flow
 1.  **Audio Input**: `POST /voice` accepts mp3, mp4, wav, m4a.
 2.  **Normalization**: Converts payload to 16kHz WAV.
 3.  **Transcription**: OpenAI Whisper detects language and transcribes text.
 4.  **Reasoning**: NCAIR1/N-ATLaS (deployed on Modal) receives text + language, determines intent, and generates a response *in the same language*.
-5.  **Synthesis**: Google TTS generates the spoken response.
+5.  **Synthesis**: Spitch generates the spoken response using native African voices.
 6.  **Response**: JSON payload with intent, language metadata, and base64 audio.
 
 ## Setup
@@ -41,6 +41,7 @@ Production-quality backend for the Dára Home voice assistant, featuring native 
     ```
     *   `HF_TOKEN`: Hugging Face User Access Token.
     *   `OPENAI_API_KEY`: OpenAI API Key.
+    *   `SPITCH_API_KEY`: Spitch API Key.
 
 3.  **Install Dependencies**:
     ```bash
