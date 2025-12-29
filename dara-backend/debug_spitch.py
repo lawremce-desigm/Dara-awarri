@@ -16,10 +16,19 @@ client = Spitch(api_key=api_key)
 
 print("\n--- Testing Spitch API ---")
 tests = [
-    {"text": "Hello", "language": "en", "voice": "sade", "desc": "Default (sade/en)"},
-    {"text": "Hello", "language": "en", "voice": "funmi", "desc": "Alternative Voice (funmi)"},
+    # Suspected English voices
+    {"text": "Hello, this is a test.", "language": "en", "voice": "john", "desc": "English (john)"},
+    {"text": "Hello, this is a test.", "language": "en", "voice": "lucy", "desc": "English (lucy)"},
+    
+    # Hausa (seems to work conceptually)
     {"text": "Sannu", "language": "ha", "voice": "amina", "desc": "Hausa (amina)"},
-    # {"text": "Hello", "language": "en", "voice": "sade", "model": "legacy", "desc": "Legacy Model"}, # try legacy if supported
+    
+    # Yoruba (testing likely mapping for sade)
+    {"text": "Bawo ni", "language": "yo", "voice": "sade", "desc": "Yoruba (sade)"},
+    
+    # Igbo (Testing candidates)
+    {"text": "Kedu", "language": "ig", "voice": "ngozi", "desc": "Igbo (ngozi)"},
+    {"text": "Kedu", "language": "ig", "voice": "amara", "desc": "Igbo (amara)"},
 ]
 
 for t in tests:
@@ -27,10 +36,31 @@ for t in tests:
     try:
         # Construct args dynamically
         kwargs = {k: v for k,v in t.items() if k != "desc"}
-        kwargs["format"] = "mp3" # Keep format for consistency
+        kwargs["format"] = "mp3" 
         
         res = client.speech.generate(**kwargs)
-        print(f"✅ Success! Size: {len(res.content)}")
+        
+        # Inspect response object
+        print(f"Response Type: {type(res)}")
+        # Check standard attributes for binary content
+        content = None
+        if hasattr(res, 'content'):
+            content = res.content
+        elif hasattr(res, 'read'):
+            content = res.read()
+        elif hasattr(res, 'json'): # unlikely for binary but checking
+            pass 
+            
+        if content:
+             print(f"✅ Success! Audio size: {len(content)} bytes")
+             # Save one file to verify
+             filename = f"test_{t['voice']}_{t['language']}.mp3"
+             with open(filename, "wb") as f:
+                 f.write(content)
+             print(f"   Saved to {filename}")
+        else:
+             print(f"⚠️  Request succeeded but could not extract content. Dir(res): {dir(res)}")
+
     except Exception as e:
         print(f"❌ Failed: {e}")
 

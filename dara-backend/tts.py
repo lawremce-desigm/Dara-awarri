@@ -2,20 +2,13 @@ import os
 import asyncio
 import logging
 from typing import Optional
-
-
-from google.cloud import texttospeech
 from dotenv import load_dotenv
+from spitch import Spitch
 
 # --------------------------------------------------
 # ENV SETUP
 # --------------------------------------------------
 load_dotenv()
-
-
-
-# Requires:
-# export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service_account.json"
 
 # --------------------------------------------------
 # LOGGING
@@ -27,107 +20,64 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # --------------------------------------------------
-
+# SPITCH CLIENT
 # --------------------------------------------------
-
-
-# --------------------------------------------------
-# GOOGLE TTS CLIENT
-# --------------------------------------------------
-google_tts_client: Optional[texttospeech.TextToSpeechClient] = None
+spitch_client: Optional[Spitch] = None
 
 try:
-    google_tts_client = texttospeech.TextToSpeechClient()
-    logger.info("Google TTS client initialized")
+    api_key = os.getenv("SPITCH_API_KEY")
+    if api_key:
+        spitch_client = Spitch(api_key=api_key)
+        logger.info("Spitch client initialized")
+    else:
+        logger.error("SPITCH_API_KEY not found in .env")
 except Exception as e:
-    logger.error(f"Google TTS initialization failed: {e}")
+    logger.error(f"Spitch initialization failed: {e}")
 
 # --------------------------------------------------
-# SAFE VOICE MAP (GUARANTEED TO EXIST)
-# Nigerian English ≈ British Neural2
+# VOICE MAP
 # --------------------------------------------------
-GOOGLE_VOICE_MAP = {
-    "en": {
-        "language_code": "en-GB",
-        "name": "en-GB-Neural2-A",
-        "gender": texttospeech.SsmlVoiceGender.FEMALE,
-    },
-    "yo": {
-        "language_code": "en-GB",
-        "name": "en-GB-Neural2-B",
-        "gender": texttospeech.SsmlVoiceGender.MALE,
-    },
-    "ha": {
-        "language_code": "en-GB",
-        "name": "en-GB-Neural2-C",
-        "gender": texttospeech.SsmlVoiceGender.FEMALE,
-    },
-    "ig": {
-        "language_code": "en-GB",
-        "name": "en-GB-Neural2-D",
-        "gender": texttospeech.SsmlVoiceGender.MALE,
-    },
+# All female voices as requested
+VOICE_MAP = {
+    "en": {"voice": "lucy", "language": "en"},
+    "ha": {"voice": "amina", "language": "ha"},
+    "yo": {"voice": "sade", "language": "yo"},
+    "ig": {"voice": "ngozi", "language": "ig"},
 }
 
 # --------------------------------------------------
-# GOOGLE TTS (SYNC – RUNS IN THREAD)
+# SPITCH TTS (SYNC – RUNS IN THREAD)
 # --------------------------------------------------
-def _generate_google_tts_sync(text: str, language: str) -> Optional[bytes]:
+def _generate_spitch_tts_sync(text: str, language: str) -> Optional[bytes]:
     try:
-        if not google_tts_client:
+        if not spitch_client:
+            logger.error("Spitch client is not initialized")
             return None
 
-        voice_cfg = GOOGLE_VOICE_MAP.get(language, GOOGLE_VOICE_MAP["en"])
+        # Default to English/lucy if language not supported
+        config = VOICE_MAP.get(language, VOICE_MAP["en"])
+        
+        logger.info(f"generating audio for language {language} with voice {config['voice']}")
 
-        synthesis_input = texttospeech.SynthesisInput(text=text)
-
-        audio_config = texttospeech.AudioConfig(
-            audio_encoding=texttospeech.AudioEncoding.MP3,
-            speaking_rate=1.0,
-            pitch=0.0,
+        response = spitch_client.speech.generate(
+            text=text,
+            language=config["language"],
+            voice=config["voice"],
+            format="mp3"
         )
+        
+        # BinaryAPIResponse handling
+        content = None
+        if hasattr(response, 'content'):
+            content = response.content
+        elif hasattr(response, 'read'):
+            content = response.read()
 
-        # 1️⃣ Try explicit Neural2 voice
-        try:
-            voice = texttospeech.VoiceSelectionParams(
-                language_code=voice_cfg["language_code"],
-                name=voice_cfg["name"],
-                ssml_gender=voice_cfg["gender"],
-            )
-
-            response = google_tts_client.synthesize_speech(
-                input=synthesis_input,
-                voice=voice,
-                audio_config=audio_config,
-            )
-
-            return response.audio_content
-
-        except Exception as e:
-            logger.warning(
-                f"Voice {voice_cfg['name']} failed, retrying auto-select: {e}"
-            )
-
-        # 2️⃣ Retry without explicit name (auto-select)
-        voice = texttospeech.VoiceSelectionParams(
-            language_code=voice_cfg["language_code"],
-            ssml_gender=voice_cfg["gender"],
-        )
-
-        response = google_tts_client.synthesize_speech(
-            input=synthesis_input,
-            voice=voice,
-            audio_config=audio_config,
-        )
-
-        return response.audio_content
+        return content
 
     except Exception as e:
-        logger.error(f"Google TTS error: {e}")
+        logger.error(f"Spitch TTS error: {e}")
         return None
-
-
-
 
 
 # --------------------------------------------------
@@ -135,30 +85,29 @@ def _generate_google_tts_sync(text: str, language: str) -> Optional[bytes]:
 # --------------------------------------------------
 async def generate_audio(text: str, language: str = "en") -> bytes:
     """
-    Generate speech audio.
-    Priority:
-      1. Google Cloud TTS (fast, cheap)
-      2. OpenAI TTS (fallback)
-
+    Generate speech audio using Spitch API.
+    
+    Args:
+        text: The text to convert to speech
+        language: Language code ('en', 'ha', 'yo', 'ig')
+        
     Returns:
-      MP3 bytes
+        MP3 bytes or empty bytes on failure
     """
 
     if not text.strip():
         return b""
 
-    # 1️⃣ Google TTS
-    if google_tts_client:
-        logger.info(f"Generating Google TTS ({language})")
+    if spitch_client:
+        logger.info(f"Generating Spitch TTS ({language})")
         audio = await asyncio.to_thread(
-            _generate_google_tts_sync, text, language
+            _generate_spitch_tts_sync, text, language
         )
         if audio:
-            logger.info(f"Google TTS success ({len(audio)} bytes)")
+            logger.info(f"Spitch TTS success ({len(audio)} bytes)")
             return audio
 
-        logger.warning("Google TTS returned no audio")
-
+        logger.warning("Spitch TTS returned no audio")
 
     return b""
 
@@ -168,14 +117,28 @@ async def generate_audio(text: str, language: str = "en") -> bytes:
 # --------------------------------------------------
 if __name__ == "__main__":
     async def test():
+        print("Testing English...")
         audio = await generate_audio(
-            "Hello, this is a test of Nigerian English speech synthesis.",
+            "Hello, this is a test of Spitch English.",
             language="en",
         )
+        if audio:
+            with open("test_spitch_en.mp3", "wb") as f:
+                f.write(audio)
+            print("Saved test_spitch_en.mp3")
+        else:
+            print("Failed to generate English audio")
 
-        with open("output.mp3", "wb") as f:
-            f.write(audio)
-
-        print("Saved output.mp3")
+        print("\nTesting Igbo...")
+        audio_ig = await generate_audio(
+            "Kedu, kedu ka i mere?",
+            language="ig",
+        )
+        if audio_ig:
+            with open("test_spitch_ig.mp3", "wb") as f:
+                f.write(audio_ig)
+            print("Saved test_spitch_ig.mp3")
+        else:
+            print("Failed to generate Igbo audio")
 
     asyncio.run(test())
