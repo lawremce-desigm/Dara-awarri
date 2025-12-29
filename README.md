@@ -31,8 +31,8 @@ The user interface and central controller.
 
 ### 2. `dara-backend/` (FastAPI / Python)
 The intelligence layer hosted in the cloud/locally.
-*   **Features/Roles**: Speech-to-Text (Deepgram), Intent Classification (N-ATLaS on Modal), Text-to-Speech.
-*   **Key Tech**: Python, FastAPI, Modal, requests.
+*   **Features/Roles**: Speech-to-Text (Deepgram/Whisper), Intent Classification (N-ATLaS on Modal), Text-to-Speech (Spitch).
+*   **Key Tech**: Python, FastAPI, Modal, Spitch.
 
 ### 3. `dara-firmware/` (C++ / Arduino)
 The code running on the ESP32 microcontroller.
@@ -62,7 +62,7 @@ The code running on the ESP32 microcontroller.
 #### 2. Backend
 1.  Navigate to `dara-backend/`.
 2.  Install dependencies: `pip install -r requirements.txt`.
-3.  Set up your `.env` file with API keys (Deepgram, Modal/OpenAI, etc.).
+3.  Set up your `.env` file with API keys (Deepgram, Modal/OpenAI, Spitch, etc.).
 4.  Run the server: `python main.py`.
 
 #### 3. Mobile App
@@ -79,7 +79,7 @@ The code running on the ESP32 microcontroller.
 *   **AI/ML**:
     *   *Intent*: N-ATLaS (Nigerian Aggregated Text & Linguistic and Speech dataset) served via Modal.
     *   *STT*: Deepgram Nova-2 / OpenAI Whisper.
-    *   *TTS*: Edge-TTS / Google TTS.
+    *   *TTS*: Spitch (Native African Voices: En, Ha, Yo, Ig).
 *   **IoT**: ESP32 (C++ / Arduino).
 
 ## 📄 License
